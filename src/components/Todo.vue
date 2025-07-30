@@ -1,7 +1,9 @@
 <template>
+
   <v-container class="fill-height d-flex align-center justify-center" max-width="900">
     <v-row class="w-100" justify="center">
-      <v-col cols="12" md="8" lg="6">
+
+      <v-col cols="12" md="8" lg="6" class="mt-12">
         <div class="text-center">
           <v-img class="mb-4" height="100" src="@/assets/todo.svg" />
           <h1 class="text-h2 font-weight-bold mb-16">ToDo App</h1>
@@ -39,7 +41,7 @@
           </v-row>
 
           <!-- Aufgabenliste oder "Liste ist leer" Hinweis -->
-          <template v-if="tasks.length > 0">
+          <template v-if="taskStore.tasks.length > 0">
             <v-list-item
               class="task-item"
               v-for="(task, index) in sortedTasks"
@@ -91,63 +93,59 @@
           </template>
 
           <!-- Button: Alle löschen -->
-          <v-row justify="center" class="mt-6 delete-all-btn">
-            <v-btn color="red" variant="outlined" @click="clearAllTasks">
-              <v-icon left>mdi-delete-forever</v-icon>
-              Alle Aufgaben löschen
-            </v-btn>
-          </v-row>
+          <template v-if="taskStore.tasks.length > 0">
+            <v-row justify="center" class="mt-6">
+              <v-btn
+                class="delete-all-btn"
+                color="red"
+                variant="outlined"
+                @click="clearAllTasks"
+              >
+                <v-icon left>mdi-delete-forever</v-icon>
+                Alle Aufgaben löschen
+              </v-btn>
+            </v-row>
+          </template>
+
         </div>
+
       </v-col>
     </v-row>
+
   </v-container>
 
-  <!-- Optional: Pagination (nicht funktional, nur Deko) -->
-  <v-pagination :length="1"></v-pagination>
+
+
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
-
-const STORAGE_KEY = 'todo-list'
-
-// Aufgaben-Liste
-const tasks = ref<{ title: string, completed: boolean, timestamp: string }[]>([])
-
-// Neue Aufgabe
+import { ref, computed } from 'vue'
+import { useTaskStore } from '@/stores/app'
+const taskStore = useTaskStore()
 const newTask = ref('')
 
-// Hinzufügen
+// Aufgabe hinzufügen
 const addTask = () => {
-  if (newTask.value.trim()) {
-    tasks.value.push({
-      title: newTask.value.trim(),
-      completed: false,
-      timestamp: new Date().toISOString()
-    })
-    newTask.value = ''
-  }
+  taskStore.addTask(newTask.value)
+  newTask.value = ''
 }
 
-// Löschen einzelner Task
+// Aufgabe löschen
 const deleteTask = (index: number) => {
-  tasks.value.splice(index, 1)
+  taskStore.deleteTask(index)
 }
 
-// Alle löschen
+// Alle Aufgaben löschen
 const clearAllTasks = () => {
   if (confirm('Willst du wirklich **alle** Aufgaben löschen?')) {
-    tasks.value = []
-    localStorage.removeItem(STORAGE_KEY)
+    taskStore.clearAll()
   }
 }
 
-// Nach Status sortieren (offene oben)
-const sortedTasks = computed(() =>
-  tasks.value.slice().sort((a, b) => Number(a.completed) - Number(b.completed))
-)
+// Sortierte Aufgabenliste
+const sortedTasks = computed(() => taskStore.sortedTasks)
 
-// Formatierter Zeitstempel
+// Datumsformatierung
 const formatDate = (isoString: string) => {
   const date = new Date(isoString)
   return date.toLocaleString('de-DE', {
@@ -158,23 +156,6 @@ const formatDate = (isoString: string) => {
     minute: '2-digit'
   })
 }
-
-// Laden aus localStorage
-onMounted(() => {
-  const saved = localStorage.getItem(STORAGE_KEY)
-  if (saved) {
-    try {
-      tasks.value = JSON.parse(saved)
-    } catch (e) {
-      console.error('Fehler beim Laden der Aufgaben:', e)
-    }
-  }
-})
-
-// Speichern in localStorage
-watch(tasks, (newVal) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(newVal))
-}, { deep: true })
 </script>
 
 <style scoped>
@@ -205,9 +186,12 @@ watch(tasks, (newVal) => {
 }
 .delete-all-btn {
   width: 50% !important;
-  margin:0 auto;
+  margin: 0 auto;
+  transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
 }
 
-
-
+.delete-all-btn:hover {
+  background-color: #ff4d4d !important; /* sanftes Hellrot */
+  color: white !important;
+}
 </style>

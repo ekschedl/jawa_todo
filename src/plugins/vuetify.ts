@@ -6,23 +6,35 @@ import '@mdi/font/css/materialdesignicons.css'
 
 // Core Vuetify
 import { createVuetify } from 'vuetify'
-import * as components from 'vuetify/components'
-import * as directives from 'vuetify/directives'
+
 
 // Icon Support
 import { aliases, mdi } from 'vuetify/iconsets/mdi'
 
+const myCustomTheme = {
+  dark: false, // Startet im Hellmodus
+  colors: {
+    background: '#FFFFFF',
+    surface: '#FFFFFF',
+    primary: '#1976D2',
+    secondary: '#424242',
+    error: '#FF5252',
+    info: '#2196F3',
+    success: '#4CAF50',
+    warning: '#FB8C00',
+  },
+}
+
 export default createVuetify({
-  components,
-  directives,
+  theme: {
+    defaultTheme: 'myCustomTheme',
+    themes: {
+      myCustomTheme,
+    },
+  },
   icons: {
     defaultSet: 'mdi',
     aliases,
-    sets: {
-      mdi,
-    },
-  },
-  theme: {
-    defaultTheme: 'system',
+    sets: { mdi },
   },
 })
