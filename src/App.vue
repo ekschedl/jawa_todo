@@ -53,6 +53,7 @@ const items = [
   { title: '🏠 Home', to: '/' },
   { title: '📝 Todo App', to: '/todo' },
   { title: '🛒 Shop', to: '/shop' },
+  { title: '🛒 ShopPlatzi', to: '/shopplatzi' },
 ]
 </script>
 

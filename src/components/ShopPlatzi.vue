@@ -10,17 +10,27 @@ interface Product {
   id: number
   title: string
   price: number
-  image: string
-  category: string
+  images: string[]
+  category: {
+    id: number
+    name: string
+    image: string
+  }
 }
 
+// 🟦 Kategorie-Typ
+interface Category {
+  id: number
+  name: string
+  image: string
+}
 // 🟦 Store
 const cart = useCartStore()
 
 // 🟦 Refs
 const products = ref<Product[]>([])
-const categories = ref<{ label: string; value: string }[]>([])
-const selectedCategory = ref<string>('all')
+const categories = ref<{ label: string; value: number | 'all' }[]>([])
+const selectedCategory = ref<number | 'all'>('all')
 
 const imageDialog = ref(false)
 const selectedImage = ref('')
@@ -34,8 +44,8 @@ const loadProducts = async () => {
   try {
     const url =
       selectedCategory.value === 'all'
-        ? 'https://fakestoreapi.com/products'
-        : `https://fakestoreapi.com/products/category/${selectedCategory.value}`
+        ? 'https://api.escuelajs.co/api/v1/products'
+        : `https://api.escuelajs.co/api/v1/categories/${selectedCategory.value}/products`
 
     const res = await axios.get(url)
     products.value = res.data
@@ -43,37 +53,23 @@ const loadProducts = async () => {
     console.error('Fehler beim Laden der Produkte:', err)
   }
 }
-
-// 🟦 Kategorien übersetzen
-const categoryMap: Record<string, string> = {
-  "men's clothing": 'Herrenbekleidung',
-  "women's clothing": 'Damenbekleidung',
-  "jewelery": 'Schmuck',
-  "electronics": 'Elektronik',
-}
-
-// 🟦 Kategorien laden
 const loadCategories = async () => {
   try {
-    const res = await axios.get('https://fakestoreapi.com/products/categories')
+    const res = await axios.get<Category[]>('https://api.escuelajs.co/api/v1/categories')
     categories.value = [
       { label: 'Alle Kategorien', value: 'all' },
-      ...res.data.map((cat: string) => ({
-        label: categoryMap[cat] || cat,
-        value: cat,
-      })),
+      ...res.data.map(cat => ({
+        label: cat.name,
+        value: cat.id
+      }))
     ]
   } catch (err) {
     console.error('Fehler beim Laden der Kategorien:', err)
   }
 }
 
-
-// 🟦 Watch & Init
-watch(selectedCategory, () => {
-  loadProducts()
-})
-
+// 🟦 Init
+watch(selectedCategory, loadProducts)
 onMounted(() => {
   loadCategories()
   loadProducts()
@@ -82,9 +78,8 @@ onMounted(() => {
 
 <template>
   <v-container>
-    <h1>Shop</h1>
+    <h1>ShopPlatzi</h1>
 
-    <!-- Kategorie-Auswahl -->
     <v-select
       v-model="selectedCategory"
       :items="categories"
@@ -98,7 +93,6 @@ onMounted(() => {
       class="mb-12 mt-6"
     />
 
-    <!-- Produktliste -->
     <v-row>
       <v-col
         v-for="product in products"
@@ -107,10 +101,10 @@ onMounted(() => {
       >
         <v-card class="pa-4">
           <v-img
-            :src="product.image"
+            :src="product.images[0]"
             height="200"
             class="product-img"
-            @click="openImage(product.image)"
+            @click="openImage(product.images[0])"
             cover
             style="cursor: pointer"
           />
@@ -129,15 +123,14 @@ onMounted(() => {
       </v-col>
     </v-row>
 
-    <!-- Dialog für großes Bild -->
     <v-dialog v-model="imageDialog" max-width="500">
       <v-card>
         <v-img :src="selectedImage" height="400" class="product-img" cover />
       </v-card>
     </v-dialog>
-
   </v-container>
 </template>
+
 <style scoped>
 ::v-deep(.product-img .v-img__img),
 ::v-deep(.product-img .v-img__img--cover) {
@@ -145,4 +138,5 @@ onMounted(() => {
   background-color: white;
 }
 </style>
+
 

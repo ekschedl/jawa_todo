@@ -2,13 +2,18 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
-// Interfaces
+// 🔄 Gemeinsamer Typ – beide APIs werden abgedeckt
 export interface Product {
   id: number
   title: string
   price: number
-  image: string
-  category: string
+  image?: string           // Fakestore
+  images?: string[]        // Platzi
+  category: string | {     // Beides erlauben
+    id: number
+    name: string
+    image: string
+  }
 }
 
 export interface CartItem {
@@ -19,13 +24,27 @@ export interface CartItem {
 export const useCartStore = defineStore('cart', () => {
   const cartItems = ref<CartItem[]>([])
 
-  // Nutze hier Product statt any
   const addToCart = (product: Product) => {
+    // Eindeutige Bild-URL herausholen (egal ob image oder images)
+    const image = product.image ?? product.images?.[0] ?? ''
+
+    // Kategorie-Name extrahieren
+    const category = typeof product.category === 'string'
+      ? product.category
+      : product.category.name
+
     const existingItem = cartItems.value.find(item => item.product.id === product.id)
     if (existingItem) {
       existingItem.quantity++
     } else {
-      cartItems.value.push({ product, quantity: 1 })
+      cartItems.value.push({
+        product: {
+          ...product,
+          image,     // normalisiertes Bild
+          category,  // normalisierte Kategorie
+        },
+        quantity: 1
+      })
     }
   }
 
