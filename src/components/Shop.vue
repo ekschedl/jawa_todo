@@ -29,7 +29,6 @@ function openImage(imageUrl: string) {
   selectedImage.value = imageUrl
   imageDialog.value = true
 }
-
 // 🟦 Produkte laden
 const loadProducts = async () => {
   try {
@@ -137,10 +136,8 @@ onMounted(() => {
       </v-card>
     </v-dialog>
 
-
   </v-container>
 </template>
-
 <style scoped>
 ::v-deep(.product-img .v-img__img),
 ::v-deep(.product-img .v-img__img--cover) {
@@ -148,3 +145,4 @@ onMounted(() => {
   background-color: white;
 }
 </style>
+

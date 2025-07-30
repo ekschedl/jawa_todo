@@ -7,7 +7,10 @@
   >
     <!-- Kopfzeile -->
     <v-toolbar flat color="primary" dark>
-      <v-toolbar-title>🛒 Warenkorb</v-toolbar-title>
+      <v-toolbar-title>
+        <v-icon start class="text-h5">mdi-cart</v-icon>
+        Warenkorb
+      </v-toolbar-title>
       <v-spacer />
       <v-btn icon @click="isOpen = false">
         <v-icon>mdi-close</v-icon>
@@ -133,7 +136,7 @@ const remove = (id: number) => {
   }
 }
 
-// Alles entfernen
+//Alles entfernen
 const clearCart = () => {
   cart.clearCart()
 }
@@ -143,6 +146,7 @@ const clearCart = () => {
 .cart-img ::v-deep(.v-img__img),
 .cart-img ::v-deep(.v-img__img--cover) {
   object-fit: contain !important;
+
 }
 </style>
 
