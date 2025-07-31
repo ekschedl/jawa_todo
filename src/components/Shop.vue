@@ -1,11 +1,9 @@
-
-
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
 import axios from 'axios'
 import { useCartStore } from '@/stores/cart'
 
-// 🟦 Produkt-Typ definieren
+// 🟦 Interfaces
 interface Product {
   id: number
   title: string
@@ -21,16 +19,42 @@ const cart = useCartStore()
 const products = ref<Product[]>([])
 const categories = ref<{ label: string; value: string }[]>([])
 const selectedCategory = ref<string>('all')
-
 const imageDialog = ref(false)
 const selectedImage = ref('')
+const isLoading = ref(true)
+const snackbar = ref(false)
+const snackbarText = ref('')
+const snackbarQueue = ref<string[]>([])
 
+// 🟦 Snackbar-Warteschlange
+function queueSnackbar(message: string) {
+  snackbarQueue.value.push(message)
+  if (!snackbar.value) {
+    showNextSnackbar()
+  }
+}
+
+function showNextSnackbar() {
+  if (snackbarQueue.value.length === 0) return
+
+  snackbarText.value = snackbarQueue.value.shift()!
+  snackbar.value = true
+
+  setTimeout(() => {
+    snackbar.value = false
+    setTimeout(showNextSnackbar, 300)
+  }, 2000)
+}
+
+// 🟦 Bild-Dialog
 function openImage(imageUrl: string) {
   selectedImage.value = imageUrl
   imageDialog.value = true
 }
+
 // 🟦 Produkte laden
 const loadProducts = async () => {
+  isLoading.value = true
   try {
     const url =
       selectedCategory.value === 'all'
@@ -41,10 +65,12 @@ const loadProducts = async () => {
     products.value = res.data
   } catch (err) {
     console.error('Fehler beim Laden der Produkte:', err)
+  } finally {
+    isLoading.value = false
   }
 }
 
-// 🟦 Kategorien übersetzen
+// 🟦 Kategorienübersetzungen
 const categoryMap: Record<string, string> = {
   "men's clothing": 'Herrenbekleidung',
   "women's clothing": 'Damenbekleidung',
@@ -68,8 +94,7 @@ const loadCategories = async () => {
   }
 }
 
-
-// 🟦 Watch & Init
+// 🟦 Lifecycle
 watch(selectedCategory, () => {
   loadProducts()
 })
@@ -81,7 +106,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <v-container>
+  <v-container  style="padding-top: 5vh">
     <h1>Shop</h1>
 
     <!-- Kategorie-Auswahl -->
@@ -97,6 +122,16 @@ onMounted(() => {
       color="blue"
       class="mb-12 mt-6"
     />
+
+    <!-- Ladeanzeige -->
+    <v-row justify="center" v-if="isLoading">
+      <v-progress-circular
+        indeterminate
+        color="blue"
+        size="50"
+        class="mt-4"
+      />
+    </v-row>
 
     <!-- Produktliste -->
     <v-row>
@@ -120,7 +155,7 @@ onMounted(() => {
             <v-btn
               color="primary"
               variant="outlined"
-              @click="cart.addToCart(product)"
+              @click="() => { cart.addToCart(product); queueSnackbar(`„${product.title}“ hinzugefügt`) }"
             >
               In den Warenkorb
             </v-btn>
@@ -136,8 +171,29 @@ onMounted(() => {
       </v-card>
     </v-dialog>
 
+    <!-- Snackbar für Bestätigung -->
+    <v-snackbar
+      v-model="snackbar"
+      :timeout="2000"
+      color="success"
+      elevation="2"
+      transition="slide-y-transition"
+      :transition-duration="300"
+      location="top right"
+      style="
+        position: fixed;
+        top: 5px;
+        right: 0px;
+        font-size: 0.85rem;
+        border-radius: 8px;
+        z-index: 9999;
+      "
+    >
+      {{ snackbarText }}
+    </v-snackbar>
   </v-container>
 </template>
+
 <style scoped>
 ::v-deep(.product-img .v-img__img),
 ::v-deep(.product-img .v-img__img--cover) {
@@ -145,4 +201,3 @@ onMounted(() => {
   background-color: white;
 }
 </style>
-

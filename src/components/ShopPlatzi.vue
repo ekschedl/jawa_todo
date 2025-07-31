@@ -1,11 +1,9 @@
-
-
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
 import axios from 'axios'
 import { useCartStore } from '@/stores/cart'
 
-// 🟦 Produkt-Typ definieren
+// 🟦 Interfaces
 interface Product {
   id: number
   title: string
@@ -18,12 +16,12 @@ interface Product {
   }
 }
 
-// 🟦 Kategorie-Typ
 interface Category {
   id: number
   name: string
   image: string
 }
+
 // 🟦 Store
 const cart = useCartStore()
 
@@ -31,16 +29,44 @@ const cart = useCartStore()
 const products = ref<Product[]>([])
 const categories = ref<{ label: string; value: number | 'all' }[]>([])
 const selectedCategory = ref<number | 'all'>('all')
-
 const imageDialog = ref(false)
 const selectedImage = ref('')
 
+const snackbar = ref(false)
+const snackbarText = ref('')
+const snackbarQueue = ref<string[]>([])
+
+const isLoading = ref(true)
+const allowedCategoryIds = [1, 4, 5, 22, 23, 24]
+
+// 🟦 Hilfsfunktionen
 function openImage(imageUrl: string) {
   selectedImage.value = imageUrl
   imageDialog.value = true
 }
-// 🟦 Produkte laden
+
+function queueSnackbar(message: string) {
+  snackbarQueue.value.push(message)
+  if (!snackbar.value) {
+    showNextSnackbar()
+  }
+}
+
+function showNextSnackbar() {
+  if (snackbarQueue.value.length === 0) return
+
+  snackbarText.value = snackbarQueue.value.shift()!
+  snackbar.value = true
+
+  setTimeout(() => {
+    snackbar.value = false
+    // Warte, bis die Snackbar zu ist, dann nächste
+    setTimeout(showNextSnackbar, 300)
+  }, 2000) // gleiche Dauer wie timeout
+}
+// 🟦 API-Aufrufe
 const loadProducts = async () => {
+  isLoading.value = true
   try {
     const url =
       selectedCategory.value === 'all'
@@ -49,17 +75,39 @@ const loadProducts = async () => {
 
     const res = await axios.get(url)
     products.value = res.data
+      .filter(p =>
+        typeof p.title === 'string' &&
+        p.title.length > 5 &&
+        !/test|sample|dating|demo|new product/i.test(p.title) &&
+        typeof p.price === 'number' &&
+        p.price > 0 && p.price < 1000 &&
+        Array.isArray(p.images)
+      )
+      .map(p => {
+        const validImage = typeof p.images[0] === 'string' && p.images[0].trim().startsWith('http')
+          ? p.images[0]
+          : 'https://via.placeholder.com/300x200/eeeeee/000000?text=Bild+fehlt'
+
+        return {
+          ...p,
+          images: [validImage]
+        }
+      })
   } catch (err) {
     console.error('Fehler beim Laden der Produkte:', err)
+  } finally {
+    isLoading.value = false
   }
 }
+
 const loadCategories = async () => {
   try {
     const res = await axios.get<Category[]>('https://api.escuelajs.co/api/v1/categories')
+    const filtered = res.data.filter(cat => allowedCategoryIds.includes(cat.id))
     categories.value = [
       { label: 'Alle Kategorien', value: 'all' },
-      ...res.data.map(cat => ({
-        label: cat.name,
+      ...filtered.map(cat => ({
+        label: categoryTranslations[cat.name] || cat.name,
         value: cat.id
       }))
     ]
@@ -68,7 +116,17 @@ const loadCategories = async () => {
   }
 }
 
-// 🟦 Init
+// 🟦 Übersetzungen
+const categoryTranslations: Record<string, string> = {
+  Clothes: 'Kleidung',
+  Shoes: 'Schuhe',
+  Miscellaneous: 'Verschiedenes',
+  fruit: 'Obst',
+  Electronics: 'Elektronik',
+  Furniture: 'Möbel'
+}
+
+// 🟦 Lifecycle
 watch(selectedCategory, loadProducts)
 onMounted(() => {
   loadCategories()
@@ -77,7 +135,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <v-container>
+  <v-container  style="padding-top: 5vh">
     <h1>ShopPlatzi</h1>
 
     <v-select
@@ -114,7 +172,7 @@ onMounted(() => {
             <v-btn
               color="primary"
               variant="outlined"
-              @click="cart.addToCart(product)"
+              @click="() => { cart.addToCart(product); queueSnackbar(`„${product.title}“ hinzugefügt`) }"
             >
               In den Warenkorb
             </v-btn>
@@ -123,11 +181,49 @@ onMounted(() => {
       </v-col>
     </v-row>
 
+    <v-row justify="center" v-if="isLoading">
+      <v-progress-circular
+        indeterminate
+        color="blue"
+        size="50"
+        class="mt-4"
+      />
+    </v-row>
+
+    <v-alert
+      v-if="!isLoading && products.length === 0"
+      type="info"
+      class="mt-4"
+    >
+      Keine Produkte in dieser Kategorie vorhanden.
+    </v-alert>
+
     <v-dialog v-model="imageDialog" max-width="500">
       <v-card>
         <v-img :src="selectedImage" height="400" class="product-img" cover />
       </v-card>
     </v-dialog>
+
+    <v-snackbar
+      v-model="snackbar"
+      :timeout="2000"
+      color="success"
+      elevation="2"
+      transition="slide-y-transition"
+      :transition-duration="300"
+      location="top right"
+      style="
+    position: fixed;
+    top: 5px;
+    right: 0px;
+    font-size: 0.85rem;
+
+    border-radius: 8px;
+    z-index: 9999;
+  "
+    >
+      {{ snackbarText }}
+    </v-snackbar>
   </v-container>
 </template>
 
@@ -138,5 +234,3 @@ onMounted(() => {
   background-color: white;
 }
 </style>
-
-

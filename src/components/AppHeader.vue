@@ -14,7 +14,7 @@
     />
 
     <!--Cart-Button -->
-    <v-btn icon @click="openCart">
+    <v-btn icon @click="openCart" class="mr-4">
       <v-badge
         :content="cartCount"
         :value="cartCount > 0"

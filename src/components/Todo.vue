@@ -1,11 +1,11 @@
 <template>
 
-  <v-container class="fill-height d-flex align-center justify-center" max-width="900">
-    <v-row class="w-100" justify="center">
+  <v-container class="fill-height d-flex align-start" max-width="900" style="padding-top: 10vh">
+    <v-row class="w-100 mt-20" justify="center">
 
-      <v-col cols="12" md="8" lg="6" class="mt-12">
+      <v-col cols="12" md="8" lg="6">
         <div class="text-center">
-          <v-img class="mb-4" height="100" src="@/assets/todo.svg" />
+          <v-img class="mb-8" height="100" src="@/assets/todo.svg" />
           <h1 class="text-h2 font-weight-bold mb-16">ToDo App</h1>
 
           <!-- Eingabe für neue Aufgabe -->
