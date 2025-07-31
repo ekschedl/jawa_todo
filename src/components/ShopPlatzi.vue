@@ -172,7 +172,7 @@ onMounted(() => {
 <template>
   <v-container  style="padding-top: 5vh">
     <h1>ShopPlatzi</h1>
-    <v-row class="mt-4 mb-6" align="center">
+    <v-row class="mt-4 mb-6" dense>
       <!-- Suchfeld -->
       <v-col cols="12" md="9">
         <v-text-field
@@ -181,7 +181,6 @@ onMounted(() => {
           variant="outlined"
           density="comfortable"
           clearable
-
         />
       </v-col>
 
@@ -189,19 +188,18 @@ onMounted(() => {
       <v-col
         cols="12"
         md="3"
-        class="d-flex justify-end"
+        class="mt-n5 d-flex justify-center justify-md-end align-center"
       >
-        <div style="padding-bottom: 2vh">
-          <v-switch
-            v-model="showOnlyFavorites"
-            label="Nur ❤️ Favoriten"
-            color="red"
-            inset
-            hide-details
-          />
+        <div>
+        <v-switch
+          v-model="showOnlyFavorites"
+          label="Nur ❤️ Favoriten"
+          color="red"
+          inset
+          hide-details
+        />
         </div>
       </v-col>
-
     </v-row>
 
 
