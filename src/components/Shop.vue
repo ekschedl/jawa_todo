@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { computed, ref, watch, onMounted } from 'vue'
 import axios from 'axios'
 import { useCartStore } from '@/stores/cart'
 
@@ -12,6 +12,18 @@ interface Product {
   category: string
 }
 
+
+// Suche
+const searchQuery = ref('')
+const showOnlyFavorites = ref(false)
+
+const filteredProducts = computed(() =>
+  products.value
+    .filter(p =>
+      p.title.toLowerCase().includes(searchQuery.value.toLowerCase())
+    )
+    .filter(p => !showOnlyFavorites.value || likedProducts.value.includes(p.id))
+)
 // 🟦 Store
 const cart = useCartStore()
 
@@ -25,6 +37,27 @@ const isLoading = ref(true)
 const snackbar = ref(false)
 const snackbarText = ref('')
 const snackbarQueue = ref<string[]>([])
+const likedProducts = ref<number[]>([])
+
+//Likes
+onMounted(() => {
+  const savedLikes = localStorage.getItem('likedProducts')
+  likedProducts.value = savedLikes ? JSON.parse(savedLikes) : []
+})
+watch(likedProducts, (newVal) => {
+  localStorage.setItem('likedProducts', JSON.stringify(newVal))
+}, { deep: true })
+function toggleLike(productId: number) {
+  const index = likedProducts.value.indexOf(productId)
+  if (index > -1) {
+    likedProducts.value.splice(index, 1)
+  } else {
+    likedProducts.value.push(productId)
+  }
+}
+function isLiked(productId: number): boolean {
+  return likedProducts.value.includes(productId)
+}
 
 // 🟦 Snackbar-Warteschlange
 function queueSnackbar(message: string) {
@@ -108,6 +141,37 @@ onMounted(() => {
 <template>
   <v-container  style="padding-top: 5vh">
     <h1>Shop</h1>
+    <v-row class="mt-4 mb-6" align="center">
+      <!-- Suchfeld -->
+      <v-col cols="12" md="9">
+        <v-text-field
+          v-model="searchQuery"
+          label="🔍 Produkt suchen"
+          variant="outlined"
+          density="comfortable"
+          clearable
+
+        />
+      </v-col>
+
+      <!-- Favoriten-Schalter -->
+      <v-col
+        cols="12"
+        md="3"
+        class="d-flex justify-end"
+      >
+        <div style="padding-bottom: 2vh">
+          <v-switch
+            v-model="showOnlyFavorites"
+            label="Nur ❤️ Favoriten"
+            color="red"
+            inset
+            hide-details
+          />
+        </div>
+      </v-col>
+
+    </v-row>
 
     <!-- Kategorie-Auswahl -->
     <v-select
@@ -133,10 +197,11 @@ onMounted(() => {
       />
     </v-row>
 
+
     <!-- Produktliste -->
     <v-row>
       <v-col
-        v-for="product in products"
+        v-for="product in filteredProducts"
         :key="product.id"
         cols="12" sm="6" md="4"
       >
@@ -158,6 +223,13 @@ onMounted(() => {
               @click="() => { cart.addToCart(product); queueSnackbar(`„${product.title}“ hinzugefügt`) }"
             >
               In den Warenkorb
+            </v-btn>
+            <v-btn
+              icon
+              :color="isLiked(product.id) ? 'red' : 'grey'"
+              @click="toggleLike(product.id)"
+            >
+              <v-icon>{{ isLiked(product.id) ? 'mdi-heart' : 'mdi-heart-outline' }}</v-icon>
             </v-btn>
           </v-card-actions>
         </v-card>
