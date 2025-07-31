@@ -2,6 +2,8 @@
 import { computed, ref, watch, onMounted } from 'vue'
 import axios from 'axios'
 import { useCartStore } from '@/stores/cart'
+import { useFavoritesStore } from '@/stores/favorites'
+
 
 // 🟦 Interfaces
 interface Product {
@@ -22,7 +24,7 @@ const filteredProducts = computed(() =>
     .filter(p =>
       p.title.toLowerCase().includes(searchQuery.value.toLowerCase())
     )
-    .filter(p => !showOnlyFavorites.value || likedProducts.value.includes(p.id))
+    .filter(p => !showOnlyFavorites.value || favorites.isFavorite(p.id))
 )
 // 🟦 Store
 const cart = useCartStore()
@@ -37,27 +39,14 @@ const isLoading = ref(true)
 const snackbar = ref(false)
 const snackbarText = ref('')
 const snackbarQueue = ref<string[]>([])
-const likedProducts = ref<number[]>([])
 
-//Likes
+const favorites = useFavoritesStore()
+
+
 onMounted(() => {
-  const savedLikes = localStorage.getItem('likedProducts')
-  likedProducts.value = savedLikes ? JSON.parse(savedLikes) : []
+  favorites.loadFromStorage()
 })
-watch(likedProducts, (newVal) => {
-  localStorage.setItem('likedProducts', JSON.stringify(newVal))
-}, { deep: true })
-function toggleLike(productId: number) {
-  const index = likedProducts.value.indexOf(productId)
-  if (index > -1) {
-    likedProducts.value.splice(index, 1)
-  } else {
-    likedProducts.value.push(productId)
-  }
-}
-function isLiked(productId: number): boolean {
-  return likedProducts.value.includes(productId)
-}
+
 
 // 🟦 Snackbar-Warteschlange
 function queueSnackbar(message: string) {
@@ -225,11 +214,12 @@ onMounted(() => {
             </v-btn>
             <v-btn
               icon
-              :color="isLiked(product.id) ? 'red' : 'grey'"
-              @click="toggleLike(product.id)"
+              :color="favorites.isFavorite(product.id) ? 'red' : 'grey'"
+              @click="favorites.toggleFavorite(product.id)"
             >
-              <v-icon>{{ isLiked(product.id) ? 'mdi-heart' : 'mdi-heart-outline' }}</v-icon>
+              <v-icon>{{ favorites.isFavorite(product.id) ? 'mdi-heart' : 'mdi-heart-outline' }}</v-icon>
             </v-btn>
+
           </v-card-actions>
         </v-card>
       </v-col>

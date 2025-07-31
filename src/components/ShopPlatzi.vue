@@ -2,6 +2,9 @@
 import {computed, ref, watch, onMounted } from 'vue'
 import axios from 'axios'
 import { useCartStore } from '@/stores/cart'
+import { useFavoritesStore } from '@/stores/favorites'
+
+
 
 // 🟦 Interfaces
 interface Product {
@@ -39,30 +42,14 @@ const snackbarQueue = ref<string[]>([])
 const isLoading = ref(true)
 const allowedCategoryIds = [1, 4, 5, 22, 23, 24]
 
-const likedProducts = ref<number[]>([])
 const showOnlyFavorites = ref(false)
 
+const favorites = useFavoritesStore()
 
-
-//Likes
 onMounted(() => {
-  const savedLikes = localStorage.getItem('likedProducts')
-  likedProducts.value = savedLikes ? JSON.parse(savedLikes) : []
+  favorites.loadFromStorage()
 })
-watch(likedProducts, (newVal) => {
-  localStorage.setItem('likedProducts', JSON.stringify(newVal))
-}, { deep: true })
-function toggleLike(productId: number) {
-  const index = likedProducts.value.indexOf(productId)
-  if (index > -1) {
-    likedProducts.value.splice(index, 1)
-  } else {
-    likedProducts.value.push(productId)
-  }
-}
-function isLiked(productId: number): boolean {
-  return likedProducts.value.includes(productId)
-}
+
 
 // 🟦 Hilfsfunktionen
 function openImage(imageUrl: string) {
@@ -92,12 +79,12 @@ function showNextSnackbar() {
 
 //Suche
 const searchQuery = ref('')
+
 const filteredProducts = computed(() =>
-  products.value
-    .filter(p =>
-      p.title.toLowerCase().includes(searchQuery.value.toLowerCase())
-    )
-    .filter(p => !showOnlyFavorites.value || likedProducts.value.includes(p.id))
+  products.value.filter(p =>
+    p.title.toLowerCase().includes(searchQuery.value.toLowerCase()) &&
+    (!showOnlyFavorites.value || favorites.isFavorite(p.id))
+  )
 )
 // 🟦 API-Aufrufe
 const loadProducts = async () => {
@@ -243,11 +230,14 @@ onMounted(() => {
             </v-btn>
             <v-btn
               icon
-              :color="isLiked(product.id) ? 'red' : 'grey'"
-              @click="toggleLike(product.id)"
+              :color="favorites.isFavorite(product.id) ? 'red' : 'grey'"
+              @click="favorites.toggleFavorite(product.id)"
             >
-              <v-icon>{{ isLiked(product.id) ? 'mdi-heart' : 'mdi-heart-outline' }}</v-icon>
+              <v-icon>
+                {{ favorites.isFavorite(product.id) ? 'mdi-heart' : 'mdi-heart-outline' }}
+              </v-icon>
             </v-btn>
+
           </v-card-actions>
         </v-card>
       </v-col>
