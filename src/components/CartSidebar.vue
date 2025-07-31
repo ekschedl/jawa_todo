@@ -77,6 +77,7 @@
           color="green"
           variant="elevated"
           block
+          @click="goToCheckout"
         >
           Zur Kasse
         </v-btn>
@@ -100,6 +101,13 @@ import { ref, computed } from 'vue'
 import { useCartStore } from '@/stores/cart'
 import type { CartItem } from '@/stores/cart'
 
+import { useRouter } from 'vue-router'
+const router = useRouter()
+
+const goToCheckout = () => {
+  isOpen.value = false
+  router.push('/checkout')
+}
 //  Zugriff auf den Cart-Store
 const cart = useCartStore()
 
