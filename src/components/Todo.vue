@@ -185,7 +185,7 @@ const formatDate = (isoString: string) => {
   margin-top: 5px;
 }
 .delete-all-btn {
-  width: 70% !important;
+  width: 66% !important;
   margin: 0 auto;
   transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
 }
