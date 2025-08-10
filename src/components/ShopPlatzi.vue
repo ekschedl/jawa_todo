@@ -81,7 +81,7 @@ function showNextSnackbar() {
 const searchQuery = ref('')
 
 const filteredProducts = computed(() =>
-  products.value.filter(p =>
+  products.value.filter((p: any) =>
     p.title.toLowerCase().includes(searchQuery.value.toLowerCase()) &&
     (!showOnlyFavorites.value || favorites.isFavorite(p.id))
   )
@@ -97,7 +97,7 @@ const loadProducts = async () => {
 
     const res = await axios.get(url)
     products.value = res.data
-      .filter(p =>
+      .filter((p: any) =>
         typeof p.title === 'string' &&
         p.title.length > 5 &&
         !/test|sample|dating|demo|new product/i.test(p.title) &&
@@ -105,7 +105,7 @@ const loadProducts = async () => {
         p.price > 0 && p.price < 1000 &&
         Array.isArray(p.images)
       )
-      .map(p => {
+      .map((p: any) => {
         const validImage = typeof p.images[0] === 'string' && p.images[0].trim().startsWith('http')
           ? p.images[0]
           : 'https://via.placeholder.com/300x200/eeeeee/000000?text=Bild+fehlt'
