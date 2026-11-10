@@ -1,7 +1,7 @@
 <template>
   <v-footer class="app-footer" color="grey-lighten-4" elevation="1">
     <v-container class="d-flex justify-center align-center pa-0 fill-height">
-      <span class="footer-text">© {{ new Date().getFullYear() }} – App von Katja ✨</span>
+      <span class="footer-text">© {{ new Date().getFullYear() }} – App von Ekaterina ✨</span>
     </v-container>
   </v-footer>
 </template>
