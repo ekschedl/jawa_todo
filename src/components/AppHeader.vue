@@ -14,7 +14,7 @@
     />
 
     <!--Cart-Button -->
-    <v-btn icon @click="openCart" class="mr-4">
+    <v-btn v-if="showCart" icon aria-label="Warenkorb öffnen" @click="openCart" class="mr-4">
       <v-badge
         :content="cartCount"
         :value="cartCount > 0"
@@ -35,6 +35,7 @@ import { useCartStore } from '@/stores/cart'
 const props = defineProps<{
   isDark: boolean
   cartSidebar: any
+  showCart: boolean
 }>()
 
 const emit = defineEmits<{

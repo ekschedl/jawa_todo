@@ -4,6 +4,7 @@
     <AppHeader
       :isDark="isDark"
       :cartSidebar="cartSidebar"
+      :show-cart="showCart"
       @toggleDrawer="drawer = !drawer"
       @update:dark="isDark = $event"
     />
@@ -24,7 +25,7 @@
     </v-navigation-drawer>
 
     <!-- Warenkorb -->
-    <CartSidebar ref="cartSidebar" />
+    <CartSidebar v-if="showCart" ref="cartSidebar" />
 
     <!-- Inhalt + Footer -->
     <v-main class="d-flex flex-column flex-grow-1">
@@ -35,7 +36,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import CartSidebar from '@/components/CartSidebar.vue'
 import AppHeader from '@/components/AppHeader.vue'
 import AppFooter from '@/components/AppFooter.vue'
@@ -43,6 +45,8 @@ import AppFooter from '@/components/AppFooter.vue'
 const drawer = ref(false)
 const cartSidebar = ref()
 const isDark = ref(false)
+const route = useRoute()
+const showCart = computed(() => ['/shop', '/shopplatzi'].includes(route.path.replace(/\/$/, '')))
 
 const items = [
   { title: '🏠 Home', to: '/' },
