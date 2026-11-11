@@ -95,15 +95,29 @@
           <!-- Button: Alle löschen -->
           <template v-if="taskStore.tasks.length > 0">
             <v-row justify="center" class="mt-6">
-              <v-btn
-                class="delete-all-btn"
-                color="red"
-                variant="outlined"
-                @click="clearAllTasks"
+              <v-dialog
+                v-model="deleteAllDialogOpen"
+                max-width="440"
+                aria-labelledby="delete-all-title"
+                aria-describedby="delete-all-description"
               >
-                <v-icon left>mdi-delete-forever</v-icon>
-                Alle Aufgaben löschen
-              </v-btn>
+                <template #activator="{ props }">
+                  <v-btn v-bind="props" class="delete-all-btn" color="red" variant="outlined">
+                    <v-icon left>mdi-delete-forever</v-icon>
+                    Alle Aufgaben löschen
+                  </v-btn>
+                </template>
+                <v-card>
+                  <v-card-title id="delete-all-title" class="text-wrap">Alle Aufgaben löschen?</v-card-title>
+                  <v-card-text id="delete-all-description">
+                    Möchtest du alle offenen und erledigten Aufgaben löschen?
+                  </v-card-text>
+                  <v-card-actions class="delete-all-actions">
+                    <v-btn @click="deleteAllDialogOpen = false">Abbrechen</v-btn>
+                    <v-btn color="error" variant="flat" @click="clearAllTasks">Alle löschen</v-btn>
+                  </v-card-actions>
+                </v-card>
+              </v-dialog>
             </v-row>
           </template>
 
@@ -123,6 +137,7 @@ import { ref, computed } from 'vue'
 import { useTaskStore } from '@/stores/app'
 const taskStore = useTaskStore()
 const newTask = ref('')
+const deleteAllDialogOpen = ref(false)
 
 // Aufgabe hinzufügen
 const addTask = () => {
@@ -137,9 +152,8 @@ const deleteTask = (index: number) => {
 
 // Alle Aufgaben löschen
 const clearAllTasks = () => {
-  if (confirm('Willst du wirklich **alle** Aufgaben löschen?')) {
-    taskStore.clearAll()
-  }
+  deleteAllDialogOpen.value = false
+  taskStore.clearAll()
 }
 
 // Sortierte Aufgabenliste
@@ -193,5 +207,14 @@ const formatDate = (isoString: string) => {
 .delete-all-btn:hover {
   background-color: #ff4d4d !important; /* sanftes Hellrot */
   color: white !important;
+}
+
+.delete-all-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.delete-all-actions .v-btn {
+  width: auto !important;
 }
 </style>
