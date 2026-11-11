@@ -16,6 +16,20 @@ import { fileURLToPath, URL } from 'node:url'
 export default defineConfig({
   base: '/jawa_todo/',
   plugins: [
+    {
+      name: 'pages-route-entrypoints',
+      apply: 'build',
+      generateBundle: {
+        order: 'post',
+        handler(_options, bundle) {
+          const index = bundle['index.html']
+          if (!index || index.type !== 'asset') this.error('Missing index.html in the build output')
+          for (const route of ['todo', 'shopplatzi']) {
+            this.emitFile({ type: 'asset', fileName: `${route}/index.html`, source: index.source })
+          }
+        },
+      },
+    },
     VueRouter({
       dts: 'src/typed-router.d.ts',
     }),
